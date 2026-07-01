@@ -1,0 +1,45 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# --- Environment ---
+.env
+.env.local
+.env.production
+*.env
+
+# --- IDE ---
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# --- Logs ---
+*.log
+logs/
+
+# --- Test / Coverage ---
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# --- Docker ---
+*.dockerignore
+
+# --- Uploads ---
+uploads/
+tmp/

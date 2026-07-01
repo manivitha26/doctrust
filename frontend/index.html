@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocuTrust | Enterprise RAG Platform</title>
+    <meta name="description" content="Enterprise-grade AI document intelligence with self-correcting RAG and hallucination prevention.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+
+    <!-- Toast Container (handled by toast.js) -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Auth Overlay -->
+    <div id="authOverlay" class="auth-overlay">
+        <div class="auth-bg-blobs">
+            <div class="auth-blob auth-blob-1"></div>
+            <div class="auth-blob auth-blob-2"></div>
+        </div>
+        <div class="auth-card">
+            <div class="auth-logo">
+                <div class="auth-logo-icon"><i class="ri-shield-check-fill"></i></div>
+                <h1>DocuTrust</h1>
+                <p class="auth-tagline">Enterprise Document Intelligence</p>
+            </div>
+            <div class="auth-tabs">
+                <button class="auth-tab active" id="tabLogin">Sign In</button>
+                <button class="auth-tab" id="tabRegister">Register</button>
+            </div>
+            <form id="loginForm" autocomplete="on">
+                <div class="form-group">
+                    <label for="email"><i class="ri-mail-line"></i> Corporate Email</label>
+                    <input type="email" id="email" name="email" required placeholder="you@company.com" autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <label for="password"><i class="ri-lock-line"></i> Password</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="password" name="password" required placeholder="••••••••" autocomplete="current-password">
+                        <button type="button" class="toggle-password" id="togglePwd">
+                            <i class="ri-eye-line"></i>
+                        </button>
+                    </div>
+                </div>
+                <button type="submit" id="authSubmitBtn" class="auth-btn">
+                    <span id="authBtnText">Sign In</span>
+                    <i class="ri-arrow-right-line" id="authBtnIcon"></i>
+                    <span class="auth-spinner hidden" id="authSpinner"></span>
+                </button>
+            </form>
+            <p class="auth-error" id="authError"></p>
+            <p class="auth-success" id="authSuccess"></p>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div class="app-container" id="appContainer">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+
+        <header class="app-header">
+            <div class="logo">
+                <i class="ri-shield-check-fill"></i>
+                <h1>DocuTrust</h1>
+                <span class="version-badge">v1.0</span>
+            </div>
+            <div class="header-actions">
+                <div class="workspace-selector-wrapper">
+                    <i class="ri-briefcase-line"></i>
+                    <select id="workspaceSelect" class="workspace-select">
+                        <option value="default">📁 Default Workspace</option>
+                        <option value="finance">💳 Finance Dept</option>
+                        <option value="legal">⚖️ Legal Counsel</option>
+                        <option value="hr">👥 HR & Personnel</option>
+                        <option value="new">➕ Create Workspace...</option>
+                    </select>
+                </div>
+                <span class="status-badge" id="statusBadge"><span class="pulse"></span> System Online</span>
+                <button id="themeToggleBtn" class="icon-btn" title="Toggle theme"><i class="ri-sun-line"></i></button>
+                <div class="user-badge" id="userBadge">
+                    <div class="user-avatar" id="userAvatar">?</div>
+                    <span class="user-email" id="userEmail">Loading...</span>
+                </div>
+                <button id="logoutBtn" class="logout-btn"><i class="ri-logout-box-r-line"></i> Logout</button>
+            </div>
+        </header>
+
+        <main class="split-pane">
+            <!-- Left Pane: Documents -->
+            <section class="pane left-pane">
+                <div class="pane-header">
+                    <h2><i class="ri-file-pdf-line"></i> Knowledge Base</h2>
+                    <span class="doc-count-badge" id="docCountBadge">0</span>
+                </div>
+
+                <div class="upload-zone" id="uploadZone">
+                    <input type="file" id="fileInput" accept=".pdf" hidden>
+                    <div class="upload-content">
+                        <div class="upload-icon-wrapper"><i class="ri-cloud-upload-line"></i></div>
+                        <h3>Drop PDF here</h3>
+                        <p>or <span class="upload-link">click to browse</span></p>
+                        <span class="upload-hint">Supports: PDF · Max 50MB</span>
+                    </div>
+                </div>
+
+                <div class="document-list">
+                    <div class="doc-list-header">
+                        <h3>Indexed Documents</h3>
+                        <button id="refreshDocsBtn" class="icon-btn" title="Refresh list"><i class="ri-refresh-line"></i></button>
+                    </div>
+                    <ul id="docItems">
+                        <!-- Skeleton loaders shown on load -->
+                        <li class="skeleton-item"><div class="skeleton skeleton-icon"></div><div class="skeleton-text"><div class="skeleton skeleton-line-long"></div><div class="skeleton skeleton-line-short"></div></div></li>
+                        <li class="skeleton-item"><div class="skeleton skeleton-icon"></div><div class="skeleton-text"><div class="skeleton skeleton-line-long"></div><div class="skeleton skeleton-line-short"></div></div></li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- History Pane -->
+            <section class="pane history-pane" id="historyPane">
+                <div class="pane-header">
+                    <h2><i class="ri-history-line"></i> Chats</h2>
+                    <button id="newChatBtn" class="icon-btn" title="New Chat Session"><i class="ri-add-line"></i></button>
+                </div>
+                <div class="session-list-container">
+                    <ul id="chatSessions" class="session-list">
+                        <!-- Populated dynamically -->
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Right Pane: Chat -->
+            <section class="pane right-pane">
+                <div class="pane-header flex-header">
+                    <h2><i class="ri-robot-line"></i> AI Evaluation & Insights</h2>
+                    <div id="confidenceMeter" class="confidence-meter hidden">
+                        <span class="meter-label"><i class="ri-pulse-line"></i> Confidence:</span>
+                        <div class="meter-track"><div id="meterBar" class="meter-bar"></div></div>
+                        <span id="meterVal" class="meter-value">0%</span>
+                    </div>
+                    <div class="pane-header-actions">
+                        <button id="exportChatBtn" class="icon-btn" title="Export Chat as PDF"><i class="ri-file-download-line"></i></button>
+                        <button id="clearChatBtn" class="icon-btn" title="Clear chat"><i class="ri-delete-bin-line"></i></button>
+                    </div>
+                </div>
+
+                <div class="chat-layout">
+                    <div class="chat-container">
+                        <div class="messages" id="messages">
+                            <div class="message system-msg welcome-msg">
+                                <div class="msg-avatar"><i class="ri-shield-check-line"></i></div>
+                                <div class="msg-content">
+                                    <p>Welcome to <strong>DocuTrust</strong>. Upload a corporate document to begin intelligent Q&A with strict source citations and self-correcting AI.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="input-area">
+                            <form id="queryForm">
+                                <div class="input-wrapper-chat">
+                                    <input type="text" id="queryInput" placeholder="Upload a document first..." disabled autocomplete="off">
+                                    <button type="submit" id="sendBtn" disabled>
+                                        <i class="ri-send-plane-fill"></i>
+                                    </button>
+                                </div>
+                            </form>
+                            <p class="input-hint">DocuTrust validates every answer against source chunks before responding.</p>
+                        </div>
+                    </div>
+
+                    <!-- Source Preview Drawer -->
+                    <div id="sourceDrawer" class="source-drawer hidden">
+                        <div class="drawer-header">
+                            <h3><i class="ri-file-search-line"></i> Citation Source Preview</h3>
+                            <button id="closeDrawerBtn" class="icon-btn" title="Close Preview"><i class="ri-close-line"></i></button>
+                        </div>
+                        <div class="drawer-body" id="sourceDrawerBody">
+                            <div class="drawer-placeholder">
+                                <i class="ri-bookmark-3-line"></i>
+                                <p>Click a source citation in the chat to preview the document excerpt here.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Document Preview Modal -->
+    <div id="docModal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal"><i class="ri-close-line"></i></button>
+            <div class="modal-header">
+                <div class="modal-doc-icon"><i class="ri-file-pdf-fill"></i></div>
+                <div>
+                    <h2 id="modalDocName">Document Name</h2>
+                    <p id="modalDocDate" class="modal-doc-date">Indexed just now</p>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="stat-row">
+                    <div class="stat-box">
+                        <span class="stat-label">Chunks Extracted</span>
+                        <span class="stat-value" id="modalDocChunks">0</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">File Size</span>
+                        <span class="stat-value" id="modalDocSize">—</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">Status</span>
+                        <span class="stat-value text-success">Indexed <i class="ri-check-double-line"></i></span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-delete-btn" id="modalDeleteBtn"><i class="ri-delete-bin-line"></i> Delete Document</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="toast.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
